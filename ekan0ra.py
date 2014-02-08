@@ -9,6 +9,7 @@ import time, sys, os
 import datetime
 import random
 
+i=0
 now = datetime.datetime.now()
 
 class MessageLogger:
@@ -36,7 +37,8 @@ class LogBot(irc.IRCClient):
 
     def  __init__(self, channel):
         self.chn = '#'+channel
-        self.channel_admin = ['kushal', 'sayan']
+        self.channel_admin = ['kushal', 'sayan','devyani']
+        
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -44,19 +46,41 @@ class LogBot(irc.IRCClient):
         self._namescallback = {}
 
     def startlogging(self, user, msg):
-        self.filename = "Logs-%s"%now.strftime("%Y-%m-%d-%H-%M")
-        self.logger = MessageLogger(open(self.filename, "a"))
-
-        self.logger.log("[## Class Started at %s ##]" %
+         self.islogging = True
+         self.filename = "Logs-%s"%now.strftime("%Y-%m-%d-%H-%M")
+         self.logger = MessageLogger(open(self.filename, "a"))
+         self.logger.log("[## Class Started at %s ##]" %
                     time.asctime(time.localtime(time.time())))
-        user = user.split('!', 1)[0]
-        self.logger.log("<%s> %s" % (user, msg))
-        self.islogging = True
+         user = user.split('!', 1)[0]
+         self.logger.log("<%s> %s" % (user, msg))
+         self.filename1 = "Log-Links-%s"%now.strftime("%Y-%m-%d-%H-%M")
+         self.filename2 = "Log-Topics-%s"%now.strftime("%Y-%m-%d-%H-%M")
+         self.logger1 = MessageLogger(open(self.filename1, "a"))
+         self.logger2 = MessageLogger(open(self.filename2, "a"))
+         if(user in self.channel_admin):
+             if (("repeat~" in msg)  and ( user in self.channel_admin)):
+                 mentor= open(self.filename3, "a")
+                 self.filename3 = "Logs-Mentor-%s"%now.strftime("%Y-%m-%d-%H-%M")
+                 self.logger3 = MessageLogger(open(self.filename3, "a"))
+                 self.logger3.log(i + " %s\n" %(msg))
+             else:
+                 for x in msg:
+                     if(("http://" in x)and(len(x)>7)):
+                         i=i+1
+                         self.logger1.log(i + " %s\n" % (x))
+             if((x[0]=='#')and(user in self.channel_admin)):
+                 self.logger2.log("%s\n" % (x))
+                 pingall(nicklist)             
+          
+             
+               
+        #self.islogging = True
 
     def stoplogging(self, channel):
         self.logger.log("[## Class Ended at %s ##]" % 
                         time.asctime(time.localtime(time.time())))
         self.logger.close()
+        self.logger1.close()
         self.upload_logs(channel)
         self.islogging = False
 
@@ -103,7 +127,7 @@ class LogBot(irc.IRCClient):
         if msg.lower().startswith('pingall:') and user_cond:
             self.pingmsg = msg.lower().lstrip('pingall:')
             self.names(channel).addCallback(self.pingall)
-
+    
     def action(self, user, channel, msg):
         """This will get called when the bot sees someone do an action."""
         user = user.split('!', 1)[0]
